@@ -4,7 +4,7 @@ services:
     image: 'mysql:latest'
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: bainaDb
+      MYSQL_DATABASE: bainadb
     ports:
       - '3307:3306'
 
@@ -12,14 +12,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: mgmt-service:1.0
+    image: mgmt-system:1.0
     depends_on:
       - mysql-db
     ports:
       - '9090:9191'
     environment:
-      SPRING_DATASOURCE_URL: 'jdbc:mysql://mysql-db:3306/bainaDb'
+      SPRING_DATASOURCE_URL: 'jdbc:mysql://mysql-db:3306/bainadb'
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
-					
-	
