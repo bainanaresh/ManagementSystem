@@ -1,5 +1,6 @@
 package com.baina.mgmt.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -14,9 +15,19 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.baina.mgmt.security.JwtAuthenticationEntryPoint;
+import com.baina.mgmt.security.JwtAuthenticationFilter;
 
 @Configuration
 public class SpringSecurityConfig {
+	
+	@Autowired
+	private JwtAuthenticationEntryPoint authenticationEntryPoint;
+
+	@Autowired
+    private JwtAuthenticationFilter authenticationFilter;
 	
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -30,12 +41,17 @@ public class SpringSecurityConfig {
 			authorize.requestMatchers(HttpMethod.PUT,"/api/**").hasRole("ADMIN");
 			authorize.requestMatchers(HttpMethod.DELETE,"/api/**").hasRole("ADMIN");
 			//authorize.requestMatchers(HttpMethod.GET,"/api/**").hasAnyRole("ADMIN","USER");
-			//authorize.requestMatchers(HttpMethod.POST,"/auth/**").permitAll();
+			 authorize.requestMatchers(HttpMethod.POST,"/auth/**").permitAll();
 			 authorize.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
 			authorize.anyRequest().permitAll();
 			
 		}
 		).httpBasic(Customizer.withDefaults());
+		
+		http.exceptionHandling( exception -> exception
+                .authenticationEntryPoint(authenticationEntryPoint));
+
+        http.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
 		
 		return http.build();
 	}
