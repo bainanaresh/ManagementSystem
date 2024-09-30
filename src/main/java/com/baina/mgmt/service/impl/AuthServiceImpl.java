@@ -1,6 +1,7 @@
 package com.baina.mgmt.service.impl;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import org.modelmapper.ModelMapper;
@@ -12,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.baina.mgmt.dto.JwtAuthResponse;
 import com.baina.mgmt.dto.LoginDto;
 import com.baina.mgmt.dto.UserRegistrationDto;
 import com.baina.mgmt.entity.Role;
@@ -65,18 +67,36 @@ public class AuthServiceImpl implements AuthService{
 	}
 	
 	@Override
-    public String login(LoginDto loginDto) {
+    public JwtAuthResponse login(LoginDto loginDto) {
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 loginDto.getUsernameOrEmail(),
                 loginDto.getPassword()
         ));
-
+        
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        
+        Optional<User> optionalUser = userRepository.findByUserNameOrEmail(loginDto.getUsernameOrEmail(), loginDto.getUsernameOrEmail());
+
+        User user=null;
+        String role=null;
+        JwtAuthResponse jwtAuthResponse=new JwtAuthResponse();
+        if(optionalUser.isPresent()) {
+        	user=optionalUser.get();
+        }
+        Optional<Role> optionalRole = user.getRoles().stream().findFirst();
+        
+        if(optionalRole.isPresent()) {
+        	role=optionalRole.get().getName();
+        }
+       
 
         String token = jwtTokenProvider.generateToken(authentication);
-
-        return token;
+        
+        jwtAuthResponse.setAccessToken(token);
+        jwtAuthResponse.setRole(role);
+   
+        return jwtAuthResponse;
     }
 
 }
